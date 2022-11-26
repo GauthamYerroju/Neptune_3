@@ -1194,10 +1194,10 @@
 #define PROBING_MARGIN 15
 
 // X and Y axis travel speed (mm/min) between probes (133*60)//
-#define XY_PROBE_FEEDRATE (40*60)
+#define XY_PROBE_FEEDRATE (80*60)
 
 // Feedrate (mm/min) for the first approach when double-probing (MULTIPLE_PROBING == 2)//
-#define Z_PROBE_FEEDRATE_FAST (0.8*60)
+#define Z_PROBE_FEEDRATE_FAST (2.4*60)
 
 // Feedrate (mm/min) for the "accurate" probe of each point//
 #define Z_PROBE_FEEDRATE_SLOW (Z_PROBE_FEEDRATE_FAST / 3)
