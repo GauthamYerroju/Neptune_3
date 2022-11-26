@@ -1,5 +1,12 @@
 # Changes from Elegoo Stock firmware
 
+## My changes
+ 
+ - Tuned offsets for BLTouch.
+ - Tuned PID values for bed and hotend.
+ - (TODO) Enable M300 support for beeps.
+ - (TODO) Increase probe points to 64 instead of 16 with GRID_MAX_POINTS_X.
+
 ## Borrowed from [mlee12382's fork](https://github.com/mlee12382/Neptune_3)
 
  - Linear Advance with K=0 so it won't affect anything unless you set it up.
