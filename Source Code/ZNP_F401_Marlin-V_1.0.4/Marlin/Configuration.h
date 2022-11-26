@@ -73,7 +73,7 @@
 // @section info
 
 // Author info of this build printed to the host during boot and M115
-#define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "(Gautham Yerroju, Elegoo Neptune)" // Who made the changes.
 //#define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
 
 /**
@@ -95,6 +95,20 @@
 
 // Show the bitmap in Marlin/_Statusscreen.h on the status screen.
 //#define CUSTOM_STATUS_SCREEN_IMAGE
+
+// MAIN CONFIGURATION SWITCHES FOR FEATURES - IS_3D and IS_DUAL_Z are not compatible with each other!
+#define HAS_BLTOUCH               // uncomment if you have a BLTouch or clone
+// #define HAS_WIFI                  // uncomment if you have wifi module installed, NOT WORKING YET!
+// #define IS_3D                     // uncomment if you have dual extruders, Requires a TMC2208 driver in the empty socket.
+// #define IS_DUAL_Z                 // uncomment if you have dual independent Z, Requires a TMC2208 driver in the empty socket.
+#define NO_NOZZLE_PREHEAT         // uncomment if you don't want the nozzle to pre-heat for leveling. RECOMMENDED Enabled.
+// #define THEME_BLUE                // uncomment if you want the Blue theme for the screen instead of Green.
+
+#if ENABLED(IS_DUAL_Z)
+  #define Z2_ENABLE_PIN  E1_ENABLE_PIN
+  #define Z2_STEP_PIN    E1_STEP_PIN
+  #define Z2_DIR_PIN     E1_DIR_PIN
+#endif
 
 // @section machine
 
@@ -125,15 +139,17 @@
  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
  */
 #define BAUDRATE 115200
-//#define BAUD_RATE_GCODE     // Enable G-code M575 to set the baud rate
+#define BAUD_RATE_GCODE     // Enable G-code M575 to set the baud rate
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
  * Currently Ethernet (-2) is only supported on Teensy 4.1 boards.
  * :[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-//#define SERIAL_PORT_2 -1
-//#define BAUDRATE_2 250000   // Enable to override BAUDRATE
+#if ENABLED(HAS_WIFI)
+  #define SERIAL_PORT_2 2
+  #define BAUDRATE_2 115200   // Enable to override BAUDRATE
+#endif
 
 /**
  * Select a third serial port on the board to use for communication with the host.
@@ -147,7 +163,7 @@
 //#define BLUETOOTH
 
 // Name displayed in the LCD "Ready" message and Info menu
-//#define CUSTOM_MACHINE_NAME "3D Printer"
+#define CUSTOM_MACHINE_NAME "Elegoo Neptune 3"
 
 // Printer's unique ID, used by some programs to differentiate between machines.
 // Choose your own or use a service like https://www.uuidgenerator.net/version4
@@ -196,7 +212,12 @@
 
 // This defines the number of extruders
 // :[0, 1, 2, 3, 4, 5, 6, 7, 8]
-#define EXTRUDERS 1
+#if ENABLED(IS_3D)
+  #define EXTRUDERS 2
+  #define SINGLENOZZLE
+#else
+  #define EXTRUDERS 1
+#endif
 
 // Generally expected filament diameter (1.75, 2.85, 3.0, ...). Used for Volumetric, Filament Width Sensor, etc.
 #define DEFAULT_NOMINAL_FILAMENT_DIA 1.75
@@ -567,7 +588,7 @@
 #define HEATER_5_MAXTEMP 275
 #define HEATER_6_MAXTEMP 275
 #define HEATER_7_MAXTEMP 275
-#define BED_MAXTEMP      110  //150
+#define BED_MAXTEMP      120
 #define CHAMBER_MAXTEMP  60
 
 /**
@@ -724,7 +745,7 @@
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
 #define PREVENT_LENGTHY_EXTRUDE
-#define EXTRUDE_MAXLENGTH 1000
+#define EXTRUDE_MAXLENGTH 500
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
@@ -838,7 +859,11 @@
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
 #define X_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define Y_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
-#define Z_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop. false for BLTouch
+#if ENABLED(HAS_BLTOUCH)
+  #define Z_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the probe.
+#else
+  #define Z_MIN_ENDSTOP_INVERTING true // Set to true to invert the logic of the probe.
+#endif
 #define I_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define J_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define K_MIN_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
@@ -848,7 +873,11 @@
 #define I_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define J_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 #define K_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
-#define Z_MIN_PROBE_ENDSTOP_INVERTING false // Set to true to invert the logic of the probe. false for BLTouch.
+#if ENABLED(HAS_BLTOUCH)
+  #define Z_MIN_PROBE_ENDSTOP_INVERTING false // Set to true to invert the logic of the probe.
+#else
+  #define Z_MIN_PROBE_ENDSTOP_INVERTING true // Set to true to invert the logic of the probe.
+#endif
 
 /**
  * Stepper Drivers
@@ -868,18 +897,23 @@
  *          TMC5130, TMC5130_STANDALONE, TMC5160, TMC5160_STANDALONE
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'L6474', 'POWERSTEP01', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
-#define X_DRIVER_TYPE  A4988
-#define Y_DRIVER_TYPE  A4988
-#define Z_DRIVER_TYPE  A4988
+#define X_DRIVER_TYPE  TMC2208_STANDALONE
+#define Y_DRIVER_TYPE  TMC2208_STANDALONE
+#define Z_DRIVER_TYPE  TMC2208_STANDALONE
 //#define X2_DRIVER_TYPE A4988
 //#define Y2_DRIVER_TYPE A4988
-//#define Z2_DRIVER_TYPE A4988
+#if ENABLED(IS_3D)
+  #define Z2_DRIVER_TYPE TMC2208_STANDALONE
+#endif
 //#define Z3_DRIVER_TYPE A4988
 //#define Z4_DRIVER_TYPE A4988
 //#define I_DRIVER_TYPE  A4988
 //#define J_DRIVER_TYPE  A4988
 //#define K_DRIVER_TYPE  A4988
-#define E0_DRIVER_TYPE A4988
+#define E0_DRIVER_TYPE TMC2208_STANDALONE
+#if ENABLED(IS_3D)
+  #define E1_DRIVER_TYPE TMC2208_STANDALONE
+#endif
 //#define E1_DRIVER_TYPE A4988
 //#define E2_DRIVER_TYPE A4988
 //#define E3_DRIVER_TYPE A4988
@@ -927,21 +961,31 @@
  * following movement settings. If fewer factors are given than the
  * total number of extruders, the last value applies to the rest.
  */
-//#define DISTINCT_E_FACTORS
+#if ENABLED(IS_3D)
+  #define DISTINCT_E_FACTORS
+#endif
 
 /**
  * Default Axis Steps Per Unit (steps/mm)
  * Override with M92
  *                                      X, Y, Z [, I [, J [, K]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 139.03743 }
+#if ENABLED(IS_3D)
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 134, 134 }
+#else
+  #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 139.03743 }
+#endif
 
 /**
  * Default Max Feed Rate (mm/s)
  * Override with M203
  *                                      X, Y, Z [, I [, J [, K]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 200, 200, 6, 60 }    //1------最高速度
+#if ENABLED(IS_3D)
+  #define DEFAULT_MAX_FEEDRATE          { 200, 200, 6, 70, 70 }
+#else  
+  #define DEFAULT_MAX_FEEDRATE          { 200, 200, 6, 70 }
+#endif
 
 //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
 #if ENABLED(LIMITED_MAX_FR_EDITING)
@@ -954,7 +998,11 @@
  * Override with M201
  *                                      X, Y, Z [, I [, J [, K]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_ACCELERATION      { 1000, 800, 100, 1000 }     //1------最高加速度
+#if ENABLED(IS_3D)
+  #define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 1000, 1000 }
+#else
+  #define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 1000 }
+#endif
 
 //#define LIMITED_MAX_ACCEL_EDITING     // Limit edit via M201 or LCD to DEFAULT_MAX_ACCELERATION * 2
 #if ENABLED(LIMITED_MAX_ACCEL_EDITING)
@@ -1021,7 +1069,7 @@
  *
  * See https://github.com/synthetos/TinyG/wiki/Jerk-Controlled-Motion-Explained
  */
-//#define S_CURVE_ACCELERATION
+#define S_CURVE_ACCELERATION
 
 //===========================================================================
 //============================= Z Probe Options =============================
@@ -1057,7 +1105,7 @@
  *      - normally-closed switches to GND and D32.
  *      - normally-open switches to 5V and D32.
  */
-//#define Z_MIN_PROBE_PIN 32 // Pin 32 is the RAMPS default
+//#define Z_MIN_PROBE_PIN PC13 // Pin 32 is the RAMPS default
 
 /**
  * Probe Type
@@ -1083,7 +1131,9 @@
  * Use the nozzle as the probe, as with a conductive
  * nozzle system or a piezo-electric smart effector.
  */
-//#define NOZZLE_AS_PROBE
+#if NONE(HAS_BLTOUCH)
+  #define NOZZLE_AS_PROBE
+#endif
 
 /**
  * Z Servo Probe, such as an endstop switch on a rotating arm.
@@ -1094,7 +1144,9 @@
 /**
  * The BLTouch probe uses a Hall effect sensor and emulates a servo.
  */
-#define BLTOUCH
+#if ENABLED(HAS_BLTOUCH)
+  #define BLTOUCH
+#endif
 
 /**
  * Touch-MI Probe by hotends.fr
@@ -1186,21 +1238,37 @@
  *     |    [-]    |
  *     O-- FRONT --+
  */
-#define NOZZLE_TO_PROBE_OFFSET { 0, 0, 0.1 }
+#if ENABLED(HAS_BLTOUCH)
+  // #define NOZZLE_TO_PROBE_OFFSET { 0, 37.714, 0 } // For Manta MK2
+  #define NOZZLE_TO_PROBE_OFFSET { 2, 39.5, -0.72 } // For Manta MK2 Custom
+#else
+  #define NOZZLE_TO_PROBE_OFFSET { 0, 0, 0.1 }
+#endif
 
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
-//2----------探测更边上的范围
-#define PROBING_MARGIN 15
+#define PROBING_MARGIN 10
 
 // X and Y axis travel speed (mm/min) between probes (133*60)//
-#define XY_PROBE_FEEDRATE (80*60)
+#if NONE(HAS_BLTOUCH)
+  #define XY_PROBE_FEEDRATE (40*60)
+#else
+  #define XY_PROBE_FEEDRATE (4000)
+#endif
 
 // Feedrate (mm/min) for the first approach when double-probing (MULTIPLE_PROBING == 2)//
-#define Z_PROBE_FEEDRATE_FAST (2.4*60)
+#if NONE(HAS_BLTOUCH)
+  #define Z_PROBE_FEEDRATE_FAST (0.8*60)
+#else
+  #define Z_PROBE_FEEDRATE_FAST (3*60)
+#endif
 
 // Feedrate (mm/min) for the "accurate" probe of each point//
-#define Z_PROBE_FEEDRATE_SLOW (Z_PROBE_FEEDRATE_FAST / 3)
+#if NONE(HAS_BLTOUCH)
+  #define Z_PROBE_FEEDRATE_SLOW (Z_PROBE_FEEDRATE_FAST / 3)
+#else
+  #define Z_PROBE_FEEDRATE_SLOW (Z_PROBE_FEEDRATE_FAST / 2)
+#endif
 
 /**
  * Probe Activation Switch
@@ -1219,8 +1287,9 @@
  * elements such as cables pulling on the carriage.
  */
 
-//2--------使用去皮，更灵活配合使用调平传感器
-#define PROBE_TARE
+#if NONE(HAS_BLTOUCH)
+  #define PROBE_TARE
+#endif
 #if ENABLED(PROBE_TARE)
   #define PROBE_TARE_TIME  10    //200 (ms) Time to hold tare pin
   #define PROBE_TARE_DELAY 250    //200 (ms) Delay after tare before
@@ -1267,19 +1336,26 @@
  * Example: `M851 Z-5` with a CLEARANCE of 4  =>  9mm from bed to nozzle.
  *     But: `M851 Z+1` with a CLEARANCE of 2  =>  2mm from bed to nozzle.
  */
-#define Z_CLEARANCE_DEPLOY_PROBE   5 // Z Clearance for Deploy/Stow//
-#define Z_CLEARANCE_BETWEEN_PROBES  2 // Z Clearance between probe points
-#define Z_CLEARANCE_MULTI_PROBE     1 // Z Clearance between multiple probes
-//#define Z_AFTER_PROBING           5 //5 Z position after probing is done
+#define Z_CLEARANCE_DEPLOY_PROBE      5 // Z Clearance for Deploy/Stow
+#if NONE(HAS_BLTOUCH)
+  #define Z_CLEARANCE_BETWEEN_PROBES  2 // Z Clearance between probe points
+  #define Z_CLEARANCE_MULTI_PROBE     1 // Z Clearance between multiple probes
+#else  
+  #define Z_CLEARANCE_BETWEEN_PROBES  5 // Z Clearance between probe points
+  #define Z_CLEARANCE_MULTI_PROBE     5 // Z Clearance between multiple probes
+#endif
+//#define Z_AFTER_PROBING             5 // Z position after probing is done
 
-#define Z_PROBE_LOW_POINT          -10 // Farthest distance below the trigger-point to go before stopping
+#define Z_PROBE_LOW_POINT            -5 // Farthest distance below the trigger-point to go before stopping
 
 // For M851 give a range for adjusting the Z probe offset
 #define Z_PROBE_OFFSET_RANGE_MIN -20
 #define Z_PROBE_OFFSET_RANGE_MAX 20
 
 // Enable the M48 repeatability test to test probe accuracy
-//#define Z_MIN_PROBE_REPEATABILITY_TEST
+#if ENABLED(HAS_BLTOUCH)
+  #define Z_MIN_PROBE_REPEATABILITY_TEST
+#endif
 
 // Before deploy/stow pause for user confirmation
 //#define PAUSE_BEFORE_DEPLOY_STOW
@@ -1363,7 +1439,7 @@
 // @section homing
 
 //#define NO_MOTION_BEFORE_HOMING // Inhibit movement until all axes have been homed. Also enable HOME_AFTER_DEACTIVATE for extra safety.
-//#define HOME_AFTER_DEACTIVATE   // Require rehoming after steppers are deactivated. Also enable NO_MOTION_BEFORE_HOMING for extra safety.
+#define HOME_AFTER_DEACTIVATE   // Require rehoming after steppers are deactivated. Also enable NO_MOTION_BEFORE_HOMING for extra safety.
 
 /**
  * Set Z_IDLE_HEIGHT if the Z-Axis moves on its own when steppers are disabled.
@@ -1571,10 +1647,12 @@
 /**
  * Auto-leveling needs preheating
  */
-//#define PREHEAT_BEFORE_LEVELING
+#define PREHEAT_BEFORE_LEVELING
 #if ENABLED(PREHEAT_BEFORE_LEVELING)
-  #define LEVELING_NOZZLE_TEMP 120   // (°C) Only applies to E0 at this time
-  #define LEVELING_BED_TEMP     50
+  #if NONE(NO_NOZZLE_PREHEAT)
+    #define LEVELING_NOZZLE_TEMP 120   // (°C) Only applies to E0 at this time
+  #endif
+  #define LEVELING_BED_TEMP     65
 #endif
 
 /**
@@ -1595,7 +1673,7 @@
   // The height can be set with M420 Z<height>
   #define ENABLE_LEVELING_FADE_HEIGHT
   #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
-    #define DEFAULT_LEVELING_FADE_HEIGHT 50.0 // (mm) Default fade height.
+    #define DEFAULT_LEVELING_FADE_HEIGHT 5.0 // (mm) Default fade height.
   #endif
 
   // For Cartesian machines, instead of dividing moves on mesh boundaries,
@@ -1607,7 +1685,7 @@
   /**
    * Enable the G26 Mesh Validation Pattern tool.
    */
-  //#define G26_MESH_VALIDATION
+  #define G26_MESH_VALIDATION
   #if ENABLED(G26_MESH_VALIDATION)
     #define MESH_TEST_NOZZLE_SIZE    0.4  // (mm) Diameter of primary nozzle.
     #define MESH_TEST_LAYER_HEIGHT   0.2  // (mm) Default layer height for G26.
@@ -1623,7 +1701,6 @@
 #if EITHER(AUTO_BED_LEVELING_LINEAR, AUTO_BED_LEVELING_BILINEAR)
 
 
-  //2--------设置网格探测点数量
   // Set the number of grid points per dimension.
   #define GRID_MAX_POINTS_X 4
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
@@ -1642,8 +1719,6 @@
     // Synthesizes intermediate points to produce a more detailed mesh.
     //
 
-    
-    //2---------探测点之间的细分数
     //#define ABL_BILINEAR_SUBDIVISION
     #if ENABLED(ABL_BILINEAR_SUBDIVISION)
       // Number of subdivisions between probe points
@@ -1739,7 +1814,6 @@
  * Commands to execute at the end of G29 probing.
  * Useful to retract or move the Z probe out of the way."G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10"
  */
-//2--------调平后的动作
 #define Z_PROBE_END_SCRIPT "M500\nM501\nG28 Z\nG90\nG1 Z0.1 F60"
 
 // @section homing
@@ -1764,7 +1838,6 @@
  * - If stepper drivers sleep, XY homing may be required again before Z homing.
  */
 
-//2--------回原点的安全位置
 #define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
@@ -1773,9 +1846,12 @@
 #endif
 
 
-//2--------G28的初始速度
 // Homing speeds (mm/min)
-#define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (0.8*60) }
+#if NONE(HAS_BLTOUCH)
+  #define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (0.8*60) }
+#else
+  #define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (10*60) }
+#endif
 
 // Validate that endstops are triggered on homing moves
 #define VALIDATE_HOMING_ENDSTOPS
@@ -1894,19 +1970,29 @@
 // Preheat Constants - Up to 5 are supported without changes
 //
 #define PREHEAT_1_LABEL       "PLA"
-#define PREHEAT_1_TEMP_HOTEND 200
-#define PREHEAT_1_TEMP_BED     50
-#define PREHEAT_1_TEMP_CHAMBER 35
-#define PREHEAT_1_FAN_SPEED     0 // Value from 0 to 255
+#define PREHEAT_1_TEMP_HOTEND  200
+#define PREHEAT_1_TEMP_BED      60
+#define PREHEAT_1_TEMP_CHAMBER  35
+#define PREHEAT_1_FAN_SPEED      0 // Value from 0 to 255
 
-#define PREHEAT_2_LABEL       "ABS"
-#define PREHEAT_2_TEMP_HOTEND 240
-#define PREHEAT_2_TEMP_BED    80
-#define PREHEAT_2_TEMP_CHAMBER 35
-#define PREHEAT_2_FAN_SPEED     0 // Value from 0 to 255
+#define PREHEAT_2_LABEL       "PETG"
+#define PREHEAT_2_TEMP_HOTEND  230
+#define PREHEAT_2_TEMP_BED      75
+#define PREHEAT_2_TEMP_CHAMBER  35
+#define PREHEAT_2_FAN_SPEED      0 // Value from 0 to 255
 
-#define PREHEAT_AL_TEMP_HOTEND   0//180//140
-#define PREHEAT_AL_TEMP_BED     60//60
+#define PREHEAT_3_LABEL       "ABS"
+#define PREHEAT_3_TEMP_HOTEND  240
+#define PREHEAT_3_TEMP_BED      90
+#define PREHEAT_3_TEMP_CHAMBER  35
+#define PREHEAT_3_FAN_SPEED      0 // Value from 0 to 255
+
+#if NONE(NO_NOZZLE_PREHEAT)
+  #define PREHEAT_AL_TEMP_HOTEND  120
+#else
+  #define PREHEAT_AL_TEMP_HOTEND 0
+#endif  
+#define PREHEAT_AL_TEMP_BED     65
 
 /**
  * Nozzle Park
@@ -1919,11 +2005,11 @@
  *    P1  Raise the nozzle always to Z-park height.
  *    P2  Raise the nozzle by Z-park amount, limited to Z_MAX_POS.
  */
-//#define NOZZLE_PARK_FEATURE
+#define NOZZLE_PARK_FEATURE
 
 #if ENABLED(NOZZLE_PARK_FEATURE)
   // Specify a park position as { X, Y, Z_raise }
-  #define NOZZLE_PARK_POINT { (X_MIN_POS + 10), (Y_MAX_POS - 10), 20 }
+  #define NOZZLE_PARK_POINT { (X_MIN_POS + 10), (Y_MIN_POS + 10), 20 }
   //#define NOZZLE_PARK_X_ONLY          // X move only is required to park
   //#define NOZZLE_PARK_Y_ONLY          // Y move only is required to park
   #define NOZZLE_PARK_Z_RAISE_MIN   2   // (mm) Always raise Z by at least this distance
@@ -2137,13 +2223,13 @@
  * you must uncomment the following option or it won't work.
  */
 #define SDSUPPORT
-#define MKS_TEST  1        //之前开启这个打印圆弧会卡顿
+#define MKS_TEST  1
 /**
  * SD CARD: ENABLE CRC
  *
  * Use CRC checks and retries on the SD communication.
  */
-//#define SD_CHECK_AND_RETRY
+#define SD_CHECK_AND_RETRY
 
 /**
  * LCD Menu Items
@@ -2633,7 +2719,11 @@
 #define DGUS_LCD_UI_MKS
 //#define DGUS_LCD_UI_RELOADED
 #if ENABLED(DGUS_LCD_UI_MKS)
-  #define USE_MKS_GREEN_UI
+  #if ENABLED(BLUE_THEME)
+    #define USE_MKS_BLUE_UI
+  #else  
+    #define USE_MKS_GREEN_UI
+  #endif
 #endif
 
 //
@@ -2796,8 +2886,9 @@
 //#define TFT_COLOR_UI
 //#define TFT_LVGL_UI
 
-#if ENABLED(TFT_LVGL_UI)
-  //#define MKS_WIFI_MODULE  // MKS WiFi module
+#if ENABLED(HAS_WIFI)
+  #define MKS_WIFI_MODULE  // MKS WiFi module
+  #define COMMUNICATION_PROTOCOL_MKS_SERIAL
 #endif
 
 /**
@@ -3004,3 +3095,10 @@
 
 // Disable servo with M282 to reduce power consumption, noise, and heat when not in use
 //#define SERVO_DETACH_GCODE
+
+
+// @section Neptune SanityCheck
+
+#if ENABLED(IS_3D) && ENABLED(IS_DUAL_Z)
+  #error "You cannot have both IS_3D and IS_DUAL_Z enabled at the same time."
+#endif
